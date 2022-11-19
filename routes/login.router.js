@@ -18,7 +18,7 @@ loginRouter.post("/", async (req, res) => {
         if (role && role == adminkey) {
           jwt.sign({ user }, adminkey, async (err, token) => {
             if (token) {
-              return res.send({ token: token, admin: true });
+              return res.send({ token: token, admin: true, data: user });
             } else {
               return res.status(401).send({ error: "something went wrong" });
             }
@@ -26,7 +26,7 @@ loginRouter.post("/", async (req, res) => {
         } else {
           jwt.sign({ user }, secretkey, async (err, token) => {
             if (token) {
-              return res.send({ token: token, admin: false });
+              return res.send({ token: token, admin: false, data: user });
             } else {
               return res.status(401).send({ error: "something went wrong" });
             }
