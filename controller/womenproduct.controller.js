@@ -4,12 +4,20 @@ const getProduct = async (req, res) => {
   // res.send(req.query);
   var q = req?.query;
 
-  if (q.category || q.brand || q.product_name || q.sort_price) {
+  if (
+    q.category ||
+    q.brand ||
+    q.product_name ||
+    (q.page && q.limit) ||
+    q.product_id
+  ) {
     let name;
     let category;
     let brand;
-    let sort_price;
-    q.sort_price = "asc" ? (sort_price = 1) : (sort_price = -1);
+    let page = q.page;
+    let _id;
+    let limit = q.limit;
+    // q.sort_price = "asc" ? (sort_price = 1) : (sort_price = -1);
     // q.sort_price;
     q.product_name
       ? (name = { name: { $regex: "^" + q.product_name, $options: "i" } })
@@ -21,22 +29,38 @@ const getProduct = async (req, res) => {
     q.brand
       ? (brand = { brand: { $regex: "^" + q.brand, $options: "i" } })
       : (brand = null);
+    q.product_id ? (_id = { _id: q.product_id }) : (_id = null);
     // let value = { category };
-    let value = [category, brand, name];
+    let value = [category, brand, name, _id];
     let newvalue = value.filter((el) => el != null);
     console.log(newvalue);
 
     // console.log(...value);
-    let data = await womenproductModel
-      .find({ $and: [...newvalue] })
-      .sort({ price: sort_price });
-    try {
-      return res.send({ data: data });
-    } catch (err) {
-      return res.status(400).send({ error: err.message });
+    if (newvalue.length > 0) {
+      let data = await womenproductModel
+        .find({ $and: [...newvalue] })
+        .skip((page - 1) * limit)
+        .limit(limit);
+      try {
+        return res.send({ data: data });
+      } catch (err) {
+        return res.status(400).send({ error: err.message });
+      }
+    } else {
+      let data = await womenproductModel
+        .find()
+        .skip((page - 1) * limit)
+        .limit(limit);
+
+      try {
+        return res.send({ data: data });
+      } catch (err) {
+        return res.status(400).send({ error: err.message });
+      }
     }
   } else {
     let data = await womenproductModel.find();
+
     try {
       return res.send({ data: data });
     } catch (err) {

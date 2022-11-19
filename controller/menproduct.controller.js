@@ -5,11 +5,20 @@ const getProduct = async (req, res) => {
   // res.send(value);
   var q = req?.query;
 
-  if (q.category || q.brand || q.product_name || q.sort_price) {
+  if (
+    q.category ||
+    q.brand ||
+    q.product_name ||
+    (q.page && q.limit) ||
+    q.product_id
+  ) {
     let name;
     let category;
     let brand;
-    let sort_price;
+    let page = q.page;
+    let _id;
+    let limit = q.limit;
+
     q.sort_price = "asc" ? (sort_price = 1) : (sort_price = -1);
     // q.sort_price;
     q.product_name
@@ -23,18 +32,31 @@ const getProduct = async (req, res) => {
       ? (brand = { brand: { $regex: "^" + q.brand, $options: "i" } })
       : (brand = null);
     // let value = { category };
-    let value = [category, brand, name];
+    q.product_id ? (_id = { _id: q.product_id }) : (_id = null);
+    let value = [category, brand, name, _id];
     let newvalue = value.filter((el) => el != null);
     console.log(newvalue);
+    if (newvalue.length > 0) {
+      let data = await menproductModel
+        .find({ $and: [...newvalue] })
+        .skip((page - 1) * limit)
+        .limit(limit);
+      try {
+        return res.send({ data: data });
+      } catch (err) {
+        return res.status(400).send({ error: err.message });
+      }
+    } else {
+      let data = await menproductModel
+        .find()
+        .skip((page - 1) * limit)
+        .limit(limit);
 
-    console.log(...value);
-    let data = await menproductModel
-      .find({ $and: [...newvalue] })
-      .sort({ price: sort_price });
-    try {
-      return res.send({ data: data });
-    } catch (err) {
-      return res.status(400).send({ error: err.message });
+      try {
+        return res.send({ data: data });
+      } catch (err) {
+        return res.status(400).send({ error: err.message });
+      }
     }
   } else {
     let data = await menproductModel.find();
