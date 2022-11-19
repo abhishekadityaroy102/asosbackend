@@ -27,7 +27,7 @@ const getProduct = async (req, res) => {
     let newvalue = value.filter((el) => el != null);
     console.log(newvalue);
 
-    // console.log(...value);
+    console.log(...value);
     let data = await menproductModel
       .find({ $and: [...newvalue] })
       .sort({ price: sort_price });
